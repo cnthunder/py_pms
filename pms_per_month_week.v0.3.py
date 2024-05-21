@@ -69,15 +69,17 @@ def workdays_week():
     else:
         days_to_week_start = (pms_week - 1) * 7 + (7 - start_of_year.weekday())
     first_day_of_week = start_of_year + timedelta(days=days_to_week_start)
-    print(f"本周第一天为{first_day_of_week.date()}")
-    workdays = 0
+    this_week_start = first_day_of_week.date()
+    this_week_end = first_day_of_week.date()+timedelta(days=6)
+    print(f"本周第一天为{this_week_start}，最后一天为{this_week_end}")
 
+    workdays = 0
     for day in range(7):
         if is_workday(first_day_of_week):
             workdays += 1
         first_day_of_week += timedelta(days=1)
 
-    return workdays, pms_week
+    return workdays, pms_week, this_week_start, this_week_end
 
 # 判断类型为周还是月
 xls_days = (xls_date_end - xls_date_start).days + 1
@@ -85,7 +87,7 @@ xls_days = (xls_date_end - xls_date_start).days + 1
 print(f"两个日期之间相隔{xls_days}天")
 xls_type = str
 if xls_days <= 7:
-    workdays, pms_week = workdays_week()
+    workdays, pms_week, this_week_start, this_week_end = workdays_week()
     print(f"数据以{pms_year}年第{pms_week}周为标准进行计算")
     print(f"工作日一共:{workdays}天")
     xls_type = 'WEEK'
@@ -304,7 +306,7 @@ if xls_type == 'MONTH':
     # 将结果保存到Excel文件
     result_df.to_excel(file_path_output, index=False)
 if xls_type == 'WEEK':
-    result_df['日志区间'] = f"{pms_year}年第{pms_week}周"
+    result_df['日志区间'] = f"{pms_year}年第{pms_week}周：{this_week_start}至{this_week_end}"
     new_column_order = ['姓名', '工号', 'Base地', '岗位类别', '是否外包', '日志区间', '工作日', '工作日时长', '日志时长', '请假时长', '日常日志时长', '项目日志时长', '项目日志占比', 'KPI参考', '排名', '日志时长考核', '邮箱', '备注']
     # 选择并重新排列列
     result_df = result_df[new_column_order]
