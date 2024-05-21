@@ -5,14 +5,14 @@ import calendar
 import math
 from datetime import datetime, timedelta
 from chinese_calendar import is_workday
-from openpyxl.styles import PatternFill
+from openpyxl.styles import PatternFill, Border, Side
 from xls2xlsx import XLS2XLSX
 
 
-# 在原基础上适用于任何月份，文件名格式为 YYYY-M.xlsx，自动将xls转为xlsx文件，但是要自定义目录
+# 在原基础上适用于任何月份/周，自定义目录，文件名手动输入，自动将xls转为xlsx文件
 # 时长统计符合部门的规则，开始时间向前取整，时长向上取整，比如从9：50开始到10：10结束，命中2个小时
 # 每天计算时长按10小时算，以贴合部门KPI
-# 月工作日使用chinese_calendar判断，去除法定节假日，计算法定调休日，与公司考勤一致
+# 工作日使用chinese_calendar判断，去除法定节假日，计算法定调休日，与公司考勤一致
 # 不再需要修改文件路径及工作日
 
 # 定义Excel文件路径
@@ -250,17 +250,17 @@ result_df['有效日志时长'] = result_df['日志时长'] - result_df['请假�
 # 计算项目日志占比，如果
 result_df['项目日志占比'] = result_df['项目日志时长'] / result_df['工作日时长']
 
-# 计算每个支持工程师的排名，根据KPI排名
+# 计算每个支持工程师的排名，根据项目日志占比排名
 result_df['排名'] = result_df.groupby('姓名')['项目日志占比'].rank(ascending=False, method='min')
 # 保留小数点后两位
 result_df = result_df.round(2)
 
 
-# 根据KPI排名
-result_df['KPI排名'] = result_df['项目日志时长'].rank(ascending=False, method='min')
+# 根据项目日志时长排名
+result_df['排名'] = result_df['项目日志时长'].rank(ascending=False, method='min')
 
 # 将排名按项目日志占比升序排序
-result_df.sort_values(by='KPI排名', ascending=True, inplace=True)
+result_df.sort_values(by='排名', ascending=True, inplace=True)
 
 # 重新计算总支持工程师人数
 total_support_engineers = result_df['姓名'].nunique()
@@ -268,7 +268,7 @@ total_support_engineers = result_df['姓名'].nunique()
 # 更新工程师的分类
 result_df['项目日志时长'] = result_df['项目日志时长'].rank(ascending=False, method='min')
 
-# 根据KPI排名将工程师分类
+# 根据项目日志排名将工程师分类
 result_df['排名'] = result_df['项目日志时长'].apply(
     lambda rank: f"超过{int(((total_support_engineers - rank) / total_support_engineers) * 10) * 10}%" if rank > 0 else "后十名"
 )
@@ -303,14 +303,14 @@ result_df['日志时长差'] = np.where(
 if xls_type == 'MONTH':
     print(pms_month)
     result_df['月份'] = f"{pms_year}年{pms_month}月"
-    new_column_order = ['姓名', '工号', 'Base地', '岗位类别', '月份', '工作日', '工作日时长', '日志时长', '请假时长', '居家办公加日常', '有效日志时长', '有效日志占比', '项目日志时长', '项目日志占比', 'KPI参考', '排名', 'KPI排名', 'KPI有效值（0-150）', '邮箱']
+    new_column_order = ['姓名', '工号', 'Base地', '岗位类别', '月份', '工作日', '工作日时长', '日志时长', '请假时长', '居家办公加日常', '有效日志时长', '有效日志占比', '项目日志时长', '项目日志占比', 'KPI参考', '排名', 'KPI有效值（0-150）', '邮箱']
     # 选择并重新排列列
     result_df = result_df[new_column_order]
     # 将结果保存到Excel文件
     result_df.to_excel(file_path_output, index=False)
 if xls_type == 'WEEK':
     result_df['周数'] = f"{pms_year}年第{pms_week}周"
-    new_column_order = ['姓名', '工号', 'Base地', '岗位类别', '周数', '工作日', '工作日时长', '日志时长', '请假时长', '居家办公加日常', '有效日志时长', '有效日志占比', '项目日志时长', '项目日志占比', 'KPI参考', '排名', 'KPI排名', '日志时长差', '邮箱']
+    new_column_order = ['姓名', '工号', 'Base地', '岗位类别', '周数', '工作日', '工作日时长', '日志时长', '请假时长', '居家办公加日常', '有效日志时长', '有效日志占比', '项目日志时长', '项目日志占比', 'KPI参考', '排名', '日志时长差', '邮箱']
     # 选择并重新排列列
     result_df = result_df[new_column_order]
     # 将结果保存到Excel文件
@@ -319,31 +319,33 @@ if xls_type == 'WEEK':
 # 使用 openpyxl 打开 Excel 文件
 workbook = openpyxl.load_workbook(file_path_output)
 sheet = workbook.active  # 默认选择活动工作表
+border = Border(left=Side(style='thin'),right=Side(style='thin'),top=Side(style='thin'),bottom=Side(style='thin'))
+red_fill = PatternFill(start_color='ffc7ce', end_color='ffc7ce', fill_type='solid')
+green_fill = PatternFill(start_color='ceffc7', end_color='ceffc7', fill_type='solid')
+for row in sheet.iter_rows():
+    for cell in row:
+        cell.border = border
 
 for row in range(2, sheet.max_row + 1):
     sheet.cell(row=row, column=12).number_format = '0%'
     sheet.cell(row=row, column=14).number_format = '0%'
     sheet.cell(row=row, column=15).number_format = '0%'
     if sheet.cell(row=row, column=15).value < 1:
-        red_fill = PatternFill(start_color='ffc7ce', end_color='ffc7ce', fill_type='solid')
         sheet.cell(row=row, column=15).fill = red_fill
 
     if xls_type == 'MONTH':
-        sheet.cell(row=row, column=18).number_format = '0%'
-        if sheet.cell(row=row, column=18).value < 1:
-            red_fill = PatternFill(start_color='ffc7ce', end_color='ffc7ce', fill_type='solid')
-            sheet.cell(row=row, column=18).fill = red_fill
-        elif sheet.cell(row=row, column=18).value >= 1.25:
-            green_fill = PatternFill(start_color='ceffc7', end_color='ceffc7', fill_type='solid')
-            sheet.cell(row=row, column=18).fill = green_fill
+        sheet.cell(row=row, column=17).number_format = '0%'
+        if sheet.cell(row=row, column=17).value < 1:
+            sheet.cell(row=row, column=17).fill = red_fill
+        elif sheet.cell(row=row, column=17).value >= 1.25:
+            sheet.cell(row=row, column=17).fill = green_fill
 
     if xls_type == 'WEEK':
-        if sheet.cell(row=row, column=18).value != '达标':
-            red_fill = PatternFill(start_color='ffc7ce', end_color='ffc7ce', fill_type='solid')
-            hours = float(sheet.cell(row=row, column=18).value)
+        if sheet.cell(row=row, column=17).value != '达标':
+            hours = float(sheet.cell(row=row, column=17).value)
             hours_int = int(hours)
-            sheet.cell(row=row, column=18).fill = red_fill
-            sheet.cell(row=row, column=18, value=hours_int)
+            sheet.cell(row=row, column=17).fill = red_fill
+            sheet.cell(row=row, column=17, value=hours_int)
 
 # 保存工作簿
 workbook.save(file_path_output)
