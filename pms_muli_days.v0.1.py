@@ -196,12 +196,10 @@ result_df.fillna(0, inplace=True)  # 填充NaN值为0，表示没有请假时长
 
 
 # 重命名列名
-result_df.rename(columns={'时长_x': '日志时长', '时长_y': '请假时长'}, inplace=True)
+result_df.rename(columns={'时长_x': '日志时长', '时长_y': '请假时长', '居家办公加日常': '日常日志时长'}, inplace=True)
 result_df['日志时长'] = result_df['日志时长'] + result_df['请假时长']
 # 计算项目日志时长
-result_df['项目日志时长'] = result_df['日志时长'] - result_df['请假时长'] - result_df['居家办公加日常']
-# 计算有效日志时长
-result_df['有效日志时长'] = result_df['日志时长'] - result_df['请假时长']
+result_df['项目日志时长'] = result_df['日志时长'] - result_df['请假时长'] - result_df['日常日志时长']
 # 计算项目日志占比，如果
 result_df['项目日志占比'] = result_df['项目日志时长'] / result_df['工作日时长']
 
@@ -234,32 +232,25 @@ result_df.loc[result_df['排名'] == '超过0%', '排名'] = '后十名'
 # 保留小数点后两位
 result_df = result_df.round(2)
 
-# 添加项目日志时长、有效日志占比、项目日志占比这三列
-result_df['项目日志时长'] = result_df['项目日志时长'] = result_df['日志时长'] - result_df['请假时长'] - result_df['居家办公加日常']
-result_df['有效日志占比'] = result_df['有效日志时长'] / result_df['工作日时长']
+# 添加项目日志时长、项目日志占比这三列
+result_df['项目日志时长'] = result_df['项目日志时长'] = result_df['日志时长'] - result_df['请假时长'] - result_df['日常日志时长']
 result_df['项目日志占比'] = result_df['项目日志时长'] / result_df['工作日时长']
 
 # 添加KPI
 result_df['KPI参考'] = result_df['项目日志占比'] / kpi_base
 # 重置索引
 result_df.reset_index(drop=True, inplace=True)
-result_df['有效日志时长'] = result_df['有效日志时长'].round(2)
 result_df['项目日志占比'] = result_df['项目日志占比'].round(2)
-result_df['有效日志占比'] = result_df['有效日志占比'].round(2)
 result_df['KPI参考'] = result_df['KPI参考'].round(2)
 result_df['KPI有效值（0-150）'] = result_df['KPI参考'].clip(upper=1.5)
 
-
 # 重新排列列的顺序
-
-
-result_df['区间'] = f"{input_date_start}至{input_date_end}"
-new_column_order = ['姓名', '工号', 'Base地', '岗位类别', '是否外包', '区间', '工作日', '工作日时长', '日志时长', '请假时长', '居家办公加日常', '有效日志时长', '有效日志占比', '项目日志时长', '项目日志占比', 'KPI参考', '排名', 'KPI有效值（0-150）', '邮箱', '备注']
+result_df['日志区间'] = f"{input_date_start}至{input_date_end}"
+new_column_order = ['姓名', '工号', 'Base地', '岗位类别', '是否外包', '日志区间', '工作日', '工作日时长', '日志时长', '请假时长', '日常日志时长', '项目日志时长', '项目日志占比', 'KPI参考', '排名', 'KPI有效值（0-150）', '邮箱', '备注']
 # 选择并重新排列列
 result_df = result_df[new_column_order]
 # 将结果保存到Excel文件
 result_df.to_excel(file_path_output, index=False)
-
 
 # 使用 openpyxl 打开 Excel 文件
 workbook = openpyxl.load_workbook(file_path_output)
@@ -273,15 +264,14 @@ for row in sheet.iter_rows():
 
 for row in range(2, sheet.max_row + 1):
     sheet.cell(row=row, column=13).number_format = '0%'
-    sheet.cell(row=row, column=15).number_format = '0%'
+    sheet.cell(row=row, column=14).number_format = '0%'
+    if sheet.cell(row=row, column=14).value < 1:
+        sheet.cell(row=row, column=14).fill = red_fill
     sheet.cell(row=row, column=16).number_format = '0%'
     if sheet.cell(row=row, column=16).value < 1:
         sheet.cell(row=row, column=16).fill = red_fill
-    sheet.cell(row=row, column=18).number_format = '0%'
-    if sheet.cell(row=row, column=18).value < 1:
-        sheet.cell(row=row, column=18).fill = red_fill
-    elif sheet.cell(row=row, column=18).value >= 1.25:
-        sheet.cell(row=row, column=18).fill = green_fill
+    elif sheet.cell(row=row, column=16).value >= 1.25:
+        sheet.cell(row=row, column=16).fill = green_fill
 
 
 
