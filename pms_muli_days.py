@@ -163,7 +163,7 @@ total_work_duration = work_df.groupby(['姓名'])['时长'].sum().reset_index()
 
 # ##############合并KPI_List开始#######
 # 读取List文件，并指定工号为字符串类型
-list_df = pd.read_excel(file_path_list, dtype={'工号': str})
+list_df = pd.read_excel(file_path_list, sheet_name='人员信息', dtype={'工号': str})
 # 合并List
 total_work_duration = list_df.merge(total_work_duration, on=['姓名'], how='left')
 # ##############合并KPI_List完成#######
