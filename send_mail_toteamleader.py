@@ -61,9 +61,9 @@ else:
     ctx = ssl.create_default_context()
     ctx.set_ciphers('DEFAULT')
 # 使用yagmail，正式使用请调整
-yag = yagmail.SMTP(user=smtp_username, password=smtp_password, host=smtp_server, port=smtp_port, context=ctx)
+#yag = yagmail.SMTP(user=smtp_username, password=smtp_password, host=smtp_server, port=smtp_port, context=ctx)
 # 测试专用，避免发送邮件出去。
-#yag = yagmail.SMTP(user='username@mail.com', password='smtp_password', host='smtp.qq.com', port=smtp_port, context=ctx)
+yag = yagmail.SMTP(user='username@mail.com', password='smtp_password', host='smtp.qq.com', port=smtp_port, context=ctx)
 # 定义邮件内容
 body = (f'<html><body>'
         f'<p>1、请按照PMS日志要求，对团队成员上周的PMS日志进行检查；</p>'
@@ -88,8 +88,7 @@ for group_groupname, group_members in group.items():
     kpi_df.to_excel(tomail_kpi, index=False)
     kpi_df.drop(index=kpi_df.index[0:], inplace=True)
     # 邮件发送各组附件
-    if group_groupname[1] == 'wangp@sino-bridge.com':
-    #if group_groupname[1] is not None:
+    if group_groupname[1] is not None:
         subject = f"{group_groupname[0]}本周日志，发送时间{datetime.now().strftime("%Y-%m-%d")}"
         try:
             yag.send(to=group_groupname[1], subject=subject, contents=body, attachments=[tomail_xlsx, tomail_kpi])
