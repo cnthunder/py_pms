@@ -52,13 +52,13 @@ smtp_port = mail_settings['smtp_port']
 smtp_username = mail_settings['smtp_username']
 smtp_password = mail_settings['smtp_password']
 # 判断是否使用公司邮箱，如果是，自定义SSL协商
-if smtp_server == 'mail.sino-bridge.com':
+if smtp_server == 'smtp.qq.com':
+    print(f"使用QQ邮箱发送")
+else:
     print(f"使用公司邮箱发送")
     import ssl
     ctx = ssl.create_default_context()
     ctx.set_ciphers('DEFAULT')
-else:
-    print(f"使用QQ邮箱发送")
 # 使用yagmail，正式使用请调整
 #yag = yagmail.SMTP(user=smtp_username, password=smtp_password, host=smtp_server, port=smtp_port, context=ctx)
 # 测试专用，避免发送邮件出去。

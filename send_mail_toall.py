@@ -43,13 +43,13 @@ smtp_password = mail_settings['smtp_password']
 
 
 
-if smtp_server == 'mail.sino-bridge.com':
+if smtp_server == 'smtp.qq.com':
+    print(f"使用QQ邮箱发送")
+else:
     print(f"使用公司邮箱发送")
     import ssl
     ctx = ssl.create_default_context()
     ctx.set_ciphers('DEFAULT')
-else:
-    print(f"使用QQ邮箱发送")
 # 登录SMTP服务器
 server = smtplib.SMTP_SSL(smtp_server, smtp_port, context=ctx)
 server.login(smtp_username, smtp_password)
