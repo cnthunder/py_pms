@@ -8,7 +8,7 @@ from chinese_calendar import is_workday
 from openpyxl.styles import PatternFill, Border, Side
 from xls2xlsx import XLS2XLSX
 
-# 版本：240523
+# 版本：240523-new 适配新版PMS
 # 用途：将整月或整周的pms日志进行数据处理，得出日志占比等情况
 # 适用于任何月份/周，自定义目录，文件名手动输入，自动将xls转为xlsx文件
 # 时长统计符合部门的规则，开始时间向前取整，时长向上取整，比如从9：50开始到10：10结束，命中2个小时
@@ -131,32 +131,32 @@ sheet = workbook.active  # 默认选择活动工作表
 
 # 读取Excel文件project_name is None and
 for row in range(2, sheet.max_row + 1):
-    project_name = str(sheet.cell(row=row, column=5).value).strip()
-    work_content = str(sheet.cell(row=row, column=6).value).strip()
+    project_name = str(sheet.cell(row=row, column=7).value).strip()
+    work_content = str(sheet.cell(row=row, column=8).value).strip()
     if (project_name is None or project_name.strip() == "") and("假" in work_content or "休" in work_content):
         # 如果在工作内容中找到 "假" 或 "休" 关键字，则在E列中写入 "请假"
-        sheet.cell(row=row, column=5, value="请假")
-    elif (project_name is not None and sheet.cell(row=row, column=5).value is None) and ("假" in work_content or "休" in work_content):
+        sheet.cell(row=row, column=7, value="请假")
+    elif (project_name is not None and sheet.cell(row=row, column=7).value is None) and ("假" in work_content or "休" in work_content):
         # 如果在工作内容中找到 "假" 或 "休" 关键字，则在E列中写入 "请假"
-        sheet.cell(row=row, column=5, value="请假")
+        sheet.cell(row=row, column=7, value="请假")
 
 
 # 遍历每一行，搜索 "工作内容" 列中的关键字
 for row in range(2, sheet.max_row + 1):
-    project_name = str(sheet.cell(row=row, column=5).value)
+    project_name = str(sheet.cell(row=row, column=7).value)
     if project_name is None or project_name.strip() == "":
         # 如果项目名称为空，则在F列中写入 "日常"
-        sheet.cell(row=row, column=5, value="日常")
-    elif project_name is not None and sheet.cell(row=row, column=5).value is None:
+        sheet.cell(row=row, column=7, value="日常")
+    elif project_name is not None and sheet.cell(row=row, column=7).value is None:
         # 如果项目名称不为空且E列为空，则在E列中写入 "日常"
-        sheet.cell(row=row, column=5, value="日常")
+        sheet.cell(row=row, column=7, value="日常")
 
 # ########################工程师名称规范化修改################
-sheet.cell(row=1, column=4, value="姓名")
+sheet.cell(row=1, column=6, value="姓名")
 for row in range(2, sheet.max_row + 1):
-    name_fix = str(sheet.cell(row=row, column=4).value)
+    name_fix = str(sheet.cell(row=row, column=6).value)
     if name_fix.strip() == "陈帅(武汉)":
-        sheet.cell(row=row, column=4, value="陈帅")
+        sheet.cell(row=row, column=6, value="陈帅")
 # ########################################################
 
 # 保存更新后的数据到xlsx文件
@@ -168,29 +168,33 @@ workbook = openpyxl.load_workbook(file_path)  # 需要需改路径##############
 # 选择工作表
 sheet = workbook.active
 
-# 插入新列，将"时长"列插入到第五列
-sheet.insert_cols(5)
+# 插入新列，将"时长"列插入到第7列
+sheet.insert_cols(7)
 
 # 设置"时长"列的表头
-sheet.cell(row=1, column=5, value="时长")
+sheet.cell(row=1, column=7, value="时长")
 
-# 遍历每一行，计算时长并写入第5列
+# 遍历每一行，计算时长并写入第7列
 for row in range(2, sheet.max_row + 1):
-    start_time_str = sheet.cell(row=row, column=2).value
-    end_time_str = sheet.cell(row=row, column=3).value
-    leave_str = sheet.cell(row=row, column=6).value
+    bus_str = sheet.cell(row=row, column=3).value
+    start_time_str = sheet.cell(row=row, column=4).value
+    end_time_str = sheet.cell(row=row, column=5).value
+    leave_str = sheet.cell(row=row, column=8).value
     if start_time_str is not None and end_time_str is not None:
         # 将时间字符串解析为时间对象，并将开始时间向前取整
         start_time = datetime.strptime(start_time_str, '%H:%M').replace(minute=0)
         end_time = datetime.strptime(end_time_str, '%H:%M')
         # 计算时长
         duration = (end_time - start_time).total_seconds() / 3600
-        # 使用math.ceil向上取整
-        duration = math.ceil(duration)
-        # 将时长写入第五列，全天请假最多算8小时
-        if leave_str == '请假' and duration > 8:
+        # 使用math.ceil向上取整，最大15
+        duration = np.clip(math.ceil(duration), None, 15)
+        # 差旅交通最多算4小时
+        if bus_str == '差旅交通' and duration > 4:
+            duration = 4
+        # 全天请假最多算8小时
+        elif leave_str == '请假' and duration > 8:
             duration = 8
-        sheet.cell(row=row, column=5, value=duration)
+        sheet.cell(row=row, column=7, value=duration)
 
 # 保存工作簿
 workbook.save(file_path)
@@ -205,11 +209,22 @@ df = pd.read_excel(file_path)
 # 根据 "项目名称" 列筛选出工作记录
 work_df = df[df['项目名称'] != '请假'].copy()  # 使用.copy()创建一个切片的副本
 
-# A.计算日志时长
+# A1.计算日志时长
 work_df['时长'] = work_df['时长'].abs()  # 将负数时长转换为正数
 # 判断数据月份是否全部属于当前月，进行汇总
 total_work_duration = work_df.groupby(['姓名'])['时长'].sum().reset_index()
-# 创建工作日的列表，按月份匹配天数
+
+# 根据 "项目名称" 列筛选出工作记录
+bus_df = df[df['日志类型'] == '差旅交通'].copy()  # 使用.copy()创建一个切片的副本
+
+# A2.计算交通日志时长
+bus_df['时长'] = work_df['时长'].abs()  # 将负数时长转换为正数
+# 判断数据月份是否全部属于当前月，进行汇总
+bus_df.rename(columns={'时长': '差旅交通时长'}, inplace=True)
+total_bus_duration = bus_df.groupby(['姓名'])['差旅交通时长'].sum().reset_index()
+
+# A3.合并项目日志及交通日志
+total_work_duration = total_work_duration.merge(total_bus_duration, on=['姓名'], how='left')
 
 # ##############合并KPI_List开始#######
 # 读取List文件，并指定工号为字符串类型
@@ -244,10 +259,10 @@ result_df.fillna(0, inplace=True)  # 填充NaN值为0，表示没有请假时长
 
 
 # 重命名列名
-result_df.rename(columns={'时长_x': '日志时长', '时长_y': '请假时长', '居家办公加日常': '日常日志时长'}, inplace=True)
-result_df['日志时长'] = result_df['日志时长'] + result_df['请假时长']
+result_df.rename(columns={'时长_x': '总日志时长', '时长_y': '请假时长', '居家办公加日常': '日常日志时长'}, inplace=True)
+result_df['总日志时长'] = result_df['总日志时长'] + result_df['请假时长']
 # 计算项目日志时长
-result_df['项目日志时长'] = result_df['日志时长'] - result_df['请假时长'] - result_df['日常日志时长']
+result_df['项目日志时长'] = result_df['总日志时长'] - result_df['请假时长'] - result_df['日常日志时长']
 # 计算项目日志占比，如果
 result_df['项目日志占比'] = result_df['项目日志时长'] / result_df['工作日时长']
 
@@ -281,7 +296,7 @@ result_df.loc[result_df['排名'] == '超过0%', '排名'] = '后十名'
 result_df = result_df.round(2)
 
 # 添加项目日志时长、项目日志占比这三列
-result_df['项目日志时长'] = result_df['项目日志时长'] = result_df['日志时长'] - result_df['请假时长'] - result_df['日常日志时长']
+result_df['项目日志时长'] = result_df['项目日志时长'] = result_df['总日志时长'] - result_df['请假时长'] - result_df['日常日志时长']
 result_df['项目日志占比'] = result_df['项目日志时长'] / result_df['工作日时长']
 
 # 添加KPI
@@ -292,23 +307,23 @@ result_df['项目日志占比'] = result_df['项目日志占比'].round(2)
 result_df['KPI参考'] = result_df['KPI参考'].round(2)
 result_df['KPI有效值（0-150）'] = result_df['KPI参考'].clip(upper=1.5)
 result_df['日志时长考核'] = np.where(
-    result_df['日志时长'] >= (result_df['工作日时长'] * 0.8),
+    result_df['总日志时长'] >= (result_df['工作日时长'] * 0.8),
     '达标',
-    (result_df['工作日时长'] * 0.8) - result_df['日志时长']
+    (result_df['工作日时长'] * 0.8) - result_df['总日志时长']
 )
 
 # 重新排列列的顺序
 if xls_type == 'MONTH':
     print(pms_month)
     result_df['日志区间'] = f"{pms_year}年{pms_month}月"
-    new_column_order = ['姓名', '工号', 'Base地', '岗位类别', '是否外包', '日志区间', '工作日', '工作日时长', '日志时长', '请假时长', '日常日志时长', '项目日志时长', '项目日志占比', 'KPI参考', '排名', 'KPI有效值（0-150）', '邮箱', '备注']
+    new_column_order = ['姓名', '工号', 'Base地', '岗位类别', '是否外包', '日志区间', '工作日', '工作日时长', '总日志时长', '请假时长', '日常日志时长', '项目日志时长', '差旅交通时长', '项目日志占比', 'KPI参考', '排名', 'KPI有效值（0-150）', '邮箱', '备注']
     # 选择并重新排列列
     result_df = result_df[new_column_order]
     # 将结果保存到Excel文件
     result_df.to_excel(file_path_output, index=False)
 if xls_type == 'WEEK':
     result_df['日志区间'] = f"{pms_year}年第{pms_week}周：{this_week_start}至{this_week_end}"
-    new_column_order = ['姓名', '工号', 'Base地', '岗位类别', '是否外包', '日志区间', '工作日', '工作日时长', '日志时长', '请假时长', '日常日志时长', '项目日志时长', '项目日志占比', 'KPI参考', '排名', '日志时长考核', '邮箱', '备注']
+    new_column_order = ['姓名', '工号', 'Base地', '岗位类别', '是否外包', '日志区间', '工作日', '工作日时长', '总日志时长', '请假时长', '日常日志时长', '项目日志时长', '差旅交通时长', '项目日志占比', 'KPI参考', '排名', '日志时长考核', '邮箱', '备注']
     # 选择并重新排列列
     result_df = result_df[new_column_order]
     # 将结果保存到Excel文件
@@ -325,24 +340,24 @@ for row in sheet.iter_rows():
         cell.border = border
 
 for row in range(2, sheet.max_row + 1):
-    sheet.cell(row=row, column=13).number_format = '0%'
     sheet.cell(row=row, column=14).number_format = '0%'
-    if sheet.cell(row=row, column=14).value < 1:
-        sheet.cell(row=row, column=14).fill = red_fill
+    sheet.cell(row=row, column=15).number_format = '0%'
+    if sheet.cell(row=row, column=15).value < 1:
+        sheet.cell(row=row, column=15).fill = red_fill
 
     if xls_type == 'MONTH':
-        sheet.cell(row=row, column=16).number_format = '0%'
-        if sheet.cell(row=row, column=16).value < 1:
-            sheet.cell(row=row, column=16).fill = red_fill
-        elif sheet.cell(row=row, column=16).value >= 1.25:
-            sheet.cell(row=row, column=16).fill = green_fill
+        sheet.cell(row=row, column=17).number_format = '0%'
+        if sheet.cell(row=row, column=17).value < 1:
+            sheet.cell(row=row, column=17).fill = red_fill
+        elif sheet.cell(row=row, column=17).value >= 1.1:
+            sheet.cell(row=row, column=17).fill = green_fill
 
     if xls_type == 'WEEK':
-        if sheet.cell(row=row, column=16).value != '达标':
-            hours = float(sheet.cell(row=row, column=16).value)
+        if sheet.cell(row=row, column=17).value != '达标':
+            hours = float(sheet.cell(row=row, column=17).value)
             hours_int = int(hours)
-            sheet.cell(row=row, column=16).fill = red_fill
-            sheet.cell(row=row, column=16, value=f"缺{hours_int}小时日志")
+            sheet.cell(row=row, column=17).fill = red_fill
+            sheet.cell(row=row, column=17, value=f"缺{hours_int}小时日志")
 
 # 保存工作簿
 workbook.save(file_path_output)
