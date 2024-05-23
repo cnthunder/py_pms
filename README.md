@@ -1,0 +1,11 @@
+pms_muli_days
+处理任意两个日期之间的日志情况
+
+pms_per_month_week
+处理某个月或者某周的日志情况
+
+send_mail_toall
+将上面的处理结果发送给每个人
+
+send_mail_toteamleader
+将日志按组别分组，将日志及KPI评分表发送给组长
