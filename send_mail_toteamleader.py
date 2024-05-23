@@ -25,7 +25,7 @@ xls_df['日志日期'] = xls_df['日志日期'].dt.strftime('%Y/%m/%d')
 # 修改PMS导出姓名不符的情况
 xls_df.loc[xls_df['支持工程师'] == '陈帅(武汉)', '支持工程师'] = '陈帅'
 # 创建kpi评分表
-kpi_df = pd.DataFrame(columns=['姓名', 'kpi评分', '备注'])
+kpi_df = pd.DataFrame(columns=['姓名', '日志及时性', '日志准确性', '项目日志占比', '周报及时性', '周报准确性', '工作闭环及时性', '工作闭环完整性','出差报备及时性', '出差报备完整性','出差反馈及时性','出差反馈完整性', '备注'])
 # 创建一个group来存储分组后的数据
 group = {}
 # 遍历分组后的数据，并将每个组的数据存储到group中，格式为{('组名', '汇报对象'): ['成员']}
@@ -61,24 +61,28 @@ else:
     ctx = ssl.create_default_context()
     ctx.set_ciphers('DEFAULT')
 # 使用yagmail，正式使用请调整
-yag = yagmail.SMTP(user=smtp_username, password=smtp_password, host=smtp_server, port=smtp_port, context=ctx)
+#yag = yagmail.SMTP(user=smtp_username, password=smtp_password, host=smtp_server, port=smtp_port, context=ctx)
 # 测试专用，避免发送邮件出去。
-# yag = yagmail.SMTP(user='username@mail.com', password='smtp_password', host='smtp.qq.com', port=smtp_port, context=ctx)
+yag = yagmail.SMTP(user='username@mail.com', password='smtp_password', host='smtp.qq.com', port=smtp_port, context=ctx)
 # 定义邮件内容
 body = "请大家按照最新日志要求仔细核对上周团队成员PMS日志并根据KPI考核要求完成【日志准确性】评分，完成评分后邮件反馈评价结果，并要求团队成员对问题进行修改。"
 # 进行PMS日志处理，按分组写到各组的xlsx文件中，获取汇报对象的邮箱，并作为附件发送
 for group_groupname, group_members in group.items():
-    tomail_xlsx = f"{pms_file_path}mailto{group_groupname[0]}.xlsx"
-    tomail_kpi = f"{pms_file_path}kpi日志准确性{group_groupname[0]}.xlsx"
+    tomail_xlsx = f"{pms_file_path}pms日志_{group_groupname[0]}.xlsx"
+    tomail_kpi = f"{pms_file_path}kpi_{group_groupname[0]}.xlsx"
     with pd.ExcelWriter(tomail_xlsx, engine='openpyxl') as writer:
         for member in group_members:
             if member in group_members:
                 filtered_df = xls_df[xls_df['支持工程师'] == member]
+                member_mail = list_df[list_df['姓名'] == member]['邮箱'].iloc[0]
                 filtered_df.to_excel(writer, sheet_name=member, index=False)
-                kpi_row = {'姓名': member, 'kpi评分': '', '备注': ''}
-                kpi_df = kpi_df._append(kpi_row, ignore_index=True)
+                # 通过邮箱对比，不将组长自己加入到kpi评分表中
+                if group_groupname[1] != member_mail:
+                    kpi_row = {'姓名': member, '日志及时性': '本项不评分', '项目日志占比': '本项不评分',}
+                    kpi_df = kpi_df._append(kpi_row, ignore_index=True)
     kpi_df.to_excel(tomail_kpi, index=False)
     kpi_df.drop(index=kpi_df.index[0:], inplace=True)
+    # 邮件发送各组附件
     if group_groupname[1] is not None:
         subject = f"{group_groupname[0]}本周日志，发送时间{datetime.now().strftime("%Y-%m-%d")}"
         try:
