@@ -4,6 +4,9 @@ import pandas as pd
 import configparser
 import yagmail
 
+# 版本：v240523，解决SSL协商问题，可以用公司邮箱了；
+# 用途：进行PMS日志处理，按分组写到各组的xlsx文件中，获取汇报对象的邮箱，并作为附件发送至汇报对象；
+
 # 定义Excel文件路径
 pms_file_path = "E:/WORK/Python_PMS/"  # 修改为实际文件目录
 
