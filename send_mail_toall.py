@@ -28,7 +28,7 @@ unique_emails = df['邮箱'].unique()
 
 # 配置SMTP服务器和邮箱
 config = configparser.ConfigParser()
-config.read('mail_config.ini')
+config.read(f'{pms_file_path}mail_config.ini')
 mail_settings = config['MailServer']
 # mail_config.ini文件格式如下：
 # [MailServer]
