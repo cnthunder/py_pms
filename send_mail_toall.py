@@ -83,4 +83,4 @@ for email in unique_emails:
 # 断开与邮件服务器的连接
 server.quit()
 
-print("邮件发送完毕。")
+print("邮件发送完毕")

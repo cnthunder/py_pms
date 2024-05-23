@@ -91,3 +91,5 @@ for group_groupname, group_members in group.items():
             time.sleep(1)
         except Exception as e:
             print(f"{group_groupname[0]}邮件发送失败: {e}")
+
+print("邮件发送完毕")
