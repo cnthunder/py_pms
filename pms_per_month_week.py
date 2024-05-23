@@ -17,7 +17,7 @@ from xls2xlsx import XLS2XLSX
 
 
 # 定义Excel文件路径
-pms_file_path = "E:/WORK/Python_PMS/"  # 修改为实际文件目录
+pms_file_path = "E:/WORK/Python_PMS/"
 
 # 定义人员清单文件名，供后续处理合并参考
 file_path_list = f"{pms_file_path}KPI-List.xlsx"

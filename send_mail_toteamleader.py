@@ -8,7 +8,7 @@ import yagmail
 # 用途：进行PMS日志处理，按分组写到各组的xlsx文件中，获取汇报对象的邮箱，并作为附件发送至汇报对象；
 
 # 定义Excel文件路径
-pms_file_path = "E:/WORK/Python_PMS/"  # 修改为实际文件目录
+pms_file_path = "E:/WORK/Python_PMS/"
 
 # 定义人员清单文件名，供后续处理合并参考
 file_path_list = f"{pms_file_path}KPI-List.xlsx"

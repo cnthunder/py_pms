@@ -9,7 +9,7 @@ from email.mime.text import MIMEText
 # 用途：将处理过的pms日志填写情况私发给各个工程师；
 
 # 定义Excel文件路径
-pms_file_path = "E:/WORK/Python_PMS/"  # 修改为实际文件目录
+pms_file_path = "E:/WORK/Python_PMS/"
 # 定义输入xls文件名
 filename = input("输入待处理的文件名(邮件通知内容):")
 file_path = f"{pms_file_path}{filename}.xlsx"
