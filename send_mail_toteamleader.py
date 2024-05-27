@@ -83,7 +83,7 @@ for group_groupname, group_members in group.items():
                 filtered_df.to_excel(writer, sheet_name=member, index=False)
                 # 通过邮箱对比，不将组长自己加入到kpi评分表中
                 if group_groupname[1] != member_mail:
-                    kpi_row = {'姓名': member, '日志及时性': '本项不评分', '项目日志占比': '本项不评分',}
+                    kpi_row = {'姓名': member, '日志及时性': '本项不评分', '项目日志占比': '本项不评分'}
                     kpi_df = kpi_df._append(kpi_row, ignore_index=True)
     kpi_df.to_excel(tomail_kpi, index=False)
     kpi_df.drop(index=kpi_df.index[0:], inplace=True)
