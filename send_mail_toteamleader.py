@@ -73,8 +73,8 @@ body = (f'<html><body>'
         f'</body></html>')
 # 进行PMS日志处理，按分组写到各组的xlsx文件中，获取汇报对象的邮箱，并作为附件发送
 for group_groupname, group_members in group.items():
-    tomail_xlsx = f"{pms_file_path}pms日志_{group_groupname[0]}.xlsx"
-    tomail_kpi = f"{pms_file_path}kpi_{group_groupname[0]}.xlsx"
+    tomail_xlsx = f"{pms_file_path}pms日志_{group_groupname[0]}_{datetime.now().strftime("%Y-%m-%d")}.xlsx"
+    tomail_kpi = f"{pms_file_path}周kpi_{group_groupname[0]}_{datetime.now().strftime("%Y-%m-%d")}.xlsx"
     with pd.ExcelWriter(tomail_xlsx, engine='openpyxl') as writer:
         for member in group_members:
             if member in group_members:
@@ -89,7 +89,7 @@ for group_groupname, group_members in group.items():
     kpi_df.drop(index=kpi_df.index[0:], inplace=True)
     # 邮件发送各组附件
     if group_groupname[1] is not None:
-        subject = f"{group_groupname[0]}本周日志，发送时间{datetime.now().strftime("%Y-%m-%d")}"
+        subject = f"{group_groupname[0]}本周日志及周KPI，发送时间{datetime.now().strftime("%Y-%m-%d")}"
         try:
             yag.send(to=group_groupname[1], subject=subject, contents=body, attachments=[tomail_xlsx, tomail_kpi])
             print(f"{group_groupname[0]}邮件发送至{group_groupname[1]}")
