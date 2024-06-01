@@ -205,9 +205,26 @@ leave_and_home_office_df['时长'] = leave_and_home_office_df['时长'].abs()  #
 leave_and_home_office_duration = leave_and_home_office_df.groupby(['姓名'])['时长'].sum().reset_index()
 leave_and_home_office_duration.rename(columns={'时长': '居家办公加日常'}, inplace=True)
 result_df = result_df.merge(leave_and_home_office_duration, on=['姓名'], how='left')
-
+# 填充NA
 result_df.fillna(0, inplace=True)  # 填充NaN值为0，表示没有请假时长
 
+# E.计算日志填写天数
+days_df = df.copy()
+# 按姓名统计日志填写天数
+days_filled = {}
+for name in days_df['姓名'].unique():
+    # 筛选出当前人员的记录
+    person_logs = df[df['姓名'] == name]
+    # 去除重复的日期
+    unique_dates = person_logs['日志日期'].drop_duplicates()
+    # 计算该人员填写工作日志的天数
+    days_filled_count = len(unique_dates)
+    # 将结果存储到字典中
+    days_filled[name] = days_filled_count
+# 创建一个新的DataFrame来存储统计结果
+days_filled_df = pd.DataFrame(list(days_filled.items()), columns=['姓名', '填写天数'])
+# 合并至输出表格
+result_df = result_df.merge(days_filled_df, on=['姓名'], how='left')
 
 # 重命名列名
 result_df.rename(columns={'时长_x': '总日志时长', '时长_y': '请假时长', '居家办公加日常': '日常日志时长'}, inplace=True)
@@ -260,7 +277,7 @@ result_df['KPI有效值（0-150）'] = result_df['KPI参考'].clip(upper=1.5)
 
 # 重新排列列的顺序
 result_df['日志区间'] = f"{input_date_start}至{input_date_end}"
-new_column_order = ['姓名', '工号', 'Base地', '岗位类别', '外包项目', '日志区间', '工作日', '工作日时长', '总日志时长', '请假时长', '日常日志时长', '项目日志时长', '差旅交通时长', '项目日志占比', 'KPI参考', '排名', 'KPI有效值（0-150）', '邮箱', '备注']
+new_column_order = ['姓名', '工号', 'Base地', '岗位类别', '外包项目', '日志区间', '工作日', '工作日时长', '总日志时长', '请假时长', '日常日志时长', '项目日志时长', '差旅交通时长', '项目日志占比', 'KPI参考', '排名', 'KPI有效值（0-150）', '填写天数', '邮箱', '备注']
 # 选择并重新排列列
 result_df = result_df[new_column_order]
 # 将结果保存到Excel文件
@@ -281,6 +298,8 @@ for row in range(2, sheet.max_row + 1):
     sheet.cell(row=row, column=15).number_format = '0%'
     if sheet.cell(row=row, column=15).value < 1:
         sheet.cell(row=row, column=15).fill = red_fill
+    if sheet.cell(row=row, column=18).value < sheet.cell(row=row, column=7).value:
+        sheet.cell(row=row, column=18).fill = red_fill
     sheet.cell(row=row, column=17).number_format = '0%'
     if sheet.cell(row=row, column=17).value < 1:
         sheet.cell(row=row, column=17).fill = red_fill
