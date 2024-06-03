@@ -61,9 +61,9 @@ else:
     ctx = ssl.create_default_context()
     ctx.set_ciphers('DEFAULT')
 # 使用yagmail，正式使用请调整
-#yag = yagmail.SMTP(user=smtp_username, password=smtp_password, host=smtp_server, port=smtp_port, context=ctx)
+yag = yagmail.SMTP(user=smtp_username, password=smtp_password, host=smtp_server, port=smtp_port, context=ctx)
 # 测试专用，避免发送邮件出去。
-yag = yagmail.SMTP(user='username@mail.com', password='smtp_password', host='smtp.qq.com', port=smtp_port, context=ctx)
+#yag = yagmail.SMTP(user='username@mail.com', password='smtp_password', host='smtp.qq.com', port=smtp_port, context=ctx)
 # 定义邮件内容
 body = (f'<html><body>'
         f'<p>1、请按照PMS日志要求，对团队成员上周的PMS日志进行检查；</p>'
