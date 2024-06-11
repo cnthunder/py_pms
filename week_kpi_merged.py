@@ -11,7 +11,7 @@ pms_file_path = "E:/WORK/Python_PMS/"
 file_path_list = f"{pms_file_path}KPI-List.xlsx"
 # 设置包含Excel文件的目录路径
 week_kpi_path = "E:/WORK/Python_PMS/区域周KPI合并/"
-file_path_output = f"{week_kpi_path}周kpi合并_{datetime.now().strftime("%Y-%m-%d")}.xlsx"
+file_path_output = f"{week_kpi_path}/合并后/周kpi合并_{datetime.now().strftime("%Y-%m-%d")}.xlsx"
 # pms_file_path = "E:/WORK/Python_PMS/"
 # file_path_output = f"{pms_file_path}周kpi合并_{datetime.now().strftime("%Y-%m-%d")}.xlsx"
 

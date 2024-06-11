@@ -17,7 +17,7 @@ file_path_list = f"{pms_file_path}KPI-List.xlsx"
 filename = input("输入PMS直接导出日志的文件名:")
 file_path_xls = f"{pms_file_path}{filename}.xls"
 # 读取人员分组信息
-list_df = pd.read_excel(file_path_list, sheet_name='人员分组', dtype={'工号': str})
+list_df = pd.read_excel(file_path_list, sheet_name='人员分组信息', dtype={'工号': str})
 # 读取xls文件中日志
 xls_df = pd.read_excel(file_path_xls)
 # 将日志日期调整为%Y/%m/%d格式
@@ -67,7 +67,7 @@ yag = yagmail.SMTP(user=smtp_username, password=smtp_password, host=smtp_server,
 # 定义邮件内容
 body = (f'<html><body>'
         f'<p>1、请按照PMS日志要求，对团队成员上周的PMS日志进行检查；</p>'
-        f'<p>2、根据KPI考核要求完成上周KPI评分，邮件反馈评分表格；</p>'
+        f'<p>2、根据KPI考核要求完成上周KPI评分，今天下午2点前，邮件反馈评分表格；</p>'
         f'<p>3、敦促团队成员对存在问题的PMS日志进行修改；</p >'
         f'<p>4、协助团队成员对上周工作进行总结，对于可能存在的问题，协助其进行改进；</p >'
         f'</body></html>')
