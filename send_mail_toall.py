@@ -14,7 +14,7 @@ pms_file_path = "E:/WORK/Python_PMS/"
 filename = input("输入待处理的文件名(邮件通知内容):")
 file_path = f"{pms_file_path}{filename}.xlsx"
 # 读取Excel文件
-xls_df = pd.read_excel(file_path, sheet_name='Sheet1', dtype={'工号': str})  # sheet页
+xls_df = pd.read_excel(file_path, sheet_name='Sheet1', dtype={'工号': str, '项目日志占比': str})  # sheet页
 
 workdays = int(xls_df.iloc[1, 6])
 if workdays <= 7:
