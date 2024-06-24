@@ -275,6 +275,8 @@ for name in days_df['姓名'].unique():
 days_filled_df = pd.DataFrame(list(days_filled.items()), columns=['姓名', '填写天数'])
 # 合并至输出表格
 result_df = result_df.merge(days_filled_df, on=['姓名'], how='left')
+# 填充NA####
+result_df.fillna(0, inplace=True)  # 填充NaN值为0，表示没有日志
 
 # 重命名列名
 result_df.rename(columns={'时长_x': '总日志时长', '时长_y': '请假时长', '居家办公加日常': '日常日志时长'}, inplace=True)
@@ -329,8 +331,6 @@ result_df['日志时长考核'] = np.where(
     '达标',
     (result_df['工作日时长'] * 0.8) - result_df['总日志时长']
 )
-
-
 
 # 重新排列列的顺序
 if xls_type == 'MONTH':
