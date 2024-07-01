@@ -27,6 +27,7 @@ for filename in os.listdir(month_kpi_path):
         # 读取Excel文件
         kpi_df = pd.read_excel(file_path)
         kpi_df.drop(['项目日志占比', '备注_x', '备注_y'], axis=1, inplace=True)
+        kpi_df.rename(columns={'周报准确性（评分项）': '周报准确性'}, inplace=True)
         # 填充空白单元格
         # kpi_df.fillna(0, inplace=True)
         # 将读取的数据追加到kpi_merged_df中
@@ -63,7 +64,7 @@ month_kpi_df = month_kpi_df.merge(kpi_int_df[['姓名', '日志区间', 'KPI有�
 month_kpi_df.rename(columns={'KPI有效值（0-150）': '项目日志占比', '日志区间': '月份'}, inplace=True)
 
 # 从KPI_List文件里导入人员信息
-month_kpi_df = month_kpi_df.merge(list_df[['姓名', '工号', 'Base地', '岗位类别', '外包项目', '备注']], on=['姓名'], how='left')
+month_kpi_df = month_kpi_df.merge(list_df[['姓名', '工号', 'Base地', '岗位类别', '外包项目', '邮箱', '备注']], on=['姓名'], how='left')
 # 增加月KPI参考项
 month_kpi_df['月KPI参考'] = ''
 # 根据各项权重计算月KPI，并取整
@@ -90,7 +91,7 @@ month_kpi_df.loc[month_kpi_df['排名'] == '超过0%', '排名'] = '后十名'
 new_column_order = ['姓名',  '工号', 'Base地', '岗位类别', '外包项目', '月份',
                     '日志及时性', '日志准确性', '项目日志占比', '周报及时性', '周报准确性',
                     '工作报备及时性', '工作报备准确性', '工作反馈及时性', '工作反馈准确性',
-                    '月KPI参考', '排名', '备注']
+                    '月KPI参考', '排名', '邮箱', '备注']
 month_kpi_df = month_kpi_df[new_column_order]
 
 # 写入输出表格
@@ -107,6 +108,7 @@ for row in sheet.iter_rows():
         cell.border = border
 
 for row in range(2, sheet.max_row + 1):
+    sheet.cell(row=row, column=9).number_format = '0%'
     if sheet.cell(row=row, column=16).value < 95:
         sheet.cell(row=row, column=16).fill = red_fill
     elif sheet.cell(row=row, column=16).value > 110:
