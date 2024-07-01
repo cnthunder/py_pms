@@ -37,6 +37,9 @@ list_df = pd.read_excel(file_path_list, sheet_name='人员信息', dtype={'工�
 
 # 合并List
 kpi_merged_df = kpi_merged_df.merge(list_df[['姓名', '备注']], on=['姓名'], how='left')
+# 数人头
+mens_count = kpi_merged_df['姓名'].nunique()
+print(f'合并后共计人数：{mens_count}')
 # 写入文件
 kpi_merged_df.to_excel(file_path_output, index=False)
 
